@@ -131,6 +131,17 @@ The clean tasks matter because a trivial way to resist the tag would be to suppr
 
 *Figure 11. The routed model retains strong pilot performance across clean tasks. The main comparison is within the controlled Tagged PushT setting; cross-source clean baselines should be treated cautiously.*
 
+### Four example rollouts
+
+The animations below show two successful episodes per task under our model. They are qualitative examples of the online planner in motion, not matched JEPA-versus-ours comparisons or additional success-rate measurements. The percentages above come from the full 50-episode evaluations.
+
+<div class="rollout-grid">
+<figure><img src="assets/rollout-tagged-pusht.gif" alt="Two successful Tagged PushT episodes showing the pusher moving the T-shaped block toward its goal while an episode-constant corner tag remains visible" loading="lazy"><figcaption><strong>Tagged PushT.</strong> The 5×5 tag remains visible during both successful pushes.</figcaption></figure>
+<figure><img src="assets/rollout-reacher.gif" alt="Two successful Reacher episodes showing the controlled arm approaching the recorded goal pose" loading="lazy"><figcaption><strong>Reacher.</strong> The controlled arm reaches the recorded goal pose.</figcaption></figure>
+<figure><img src="assets/rollout-tworoom.gif" alt="Two successful TwoRoom episodes showing the agent navigating across rooms toward a goal" loading="lazy"><figcaption><strong>TwoRoom.</strong> Both examples cross between rooms.</figcaption></figure>
+<figure><img src="assets/rollout-cube.gif" alt="Two successful Cube manipulation episodes showing the robot and goal images" loading="lazy"><figcaption><strong>Cube.</strong> Two successful manipulation trajectories.</figcaption></figure>
+</div>
+
 ## What this result does, and does not, establish
 
 The 5×5 tag is a deliberately controlled nuisance. It lets us change one visual factor while keeping the physical trajectory and candidate actions fixed. Real control data contain camera motion, lighting, backgrounds, object identity, and task context; some persistent factors genuinely matter for action. Our router does not classify features as nuisances or guarantee that all useful geometry is preserved.

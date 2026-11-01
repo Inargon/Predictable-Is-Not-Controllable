@@ -27,6 +27,9 @@
   <link rel="stylesheet" href="assets/article.css" />
 </head>
 <body>
+<header id="title-block-header">
+<h1 class="title">Beyond the Obsessed Encoder</h1>
+</header>
 <h1
 id="beyond-the-obsessed-encoder-let-control-shape-the-latent-space">Beyond
 the Obsessed Encoder: Let Control Shape the Latent Space</h1>
@@ -44,8 +47,12 @@ objectives to define a local control direction, then prevent prediction
 from updating the shared encoder along that direction. In a single-seed
 pilot, Tagged PushT success reaches 88%, while changing only the tag is
 much less likely to change the planner’s decision.</p>
-<p><img src="assets/key-results.svg"
-alt="Three separate diagnostics comparing JEPA and our model" /></p>
+<figure>
+<img src="assets/key-results.svg"
+alt="Three separate diagnostics comparing JEPA and our model" />
+<figcaption aria-hidden="true">Three separate diagnostics comparing JEPA
+and our model</figcaption>
+</figure>
 <p><em>Figure 1. Three measurements of the same failure and its
 mitigation. The panels have different scales and denominators:
 full-space latent path length, fixed-candidate counterfactual decisions,
@@ -103,8 +110,12 @@ execute the first action of the best sequence, and repeat. This is
 online CEM planning in a learned latent space. A low prediction loss is
 useful, but planning additionally requires distances between latents to
 respond to the physical differences that matter for action.</p>
-<p><img src="assets/deck-03.png"
-alt="Action-conditioned latent prediction and latent-space planning" /></p>
+<figure>
+<img src="assets/deck-03.png"
+alt="Action-conditioned latent prediction and latent-space planning" />
+<figcaption aria-hidden="true">Action-conditioned latent prediction and
+latent-space planning</figcaption>
+</figure>
 <p><em>Figure 2. The encoder supplies the geometry used by both
 prediction and planning. The predictor estimates future latents for
 candidate action sequences; the planner ranks the resulting endpoints
@@ -144,8 +155,12 @@ property latent-space planning would like. That result supplies an ideal
 case, not a theorem about our action-conditioned PushT setup. Our
 episode-constant patch deliberately creates a factor with a different
 temporal correlation from the changing physical state.</p>
-<p><img src="assets/deck-07.png"
-alt="Why a slow nuisance is easy to align" /></p>
+<figure>
+<img src="assets/deck-07.png"
+alt="Why a slow nuisance is easy to align" />
+<figcaption aria-hidden="true">Why a slow nuisance is easy to
+align</figcaption>
+</figure>
 <p><em>Figure 3. For a standardized feature direction, stronger temporal
 correlation lowers the direct alignment cost. The slide illustrates the
 optimization pressure; the complete predictive model also conditions on
@@ -182,8 +197,12 @@ of the tag-induced covariance eigenvalues,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mo>∑</mo><mi>i</mi></msub><msub><mi>λ</mi><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>/</mi><msub><mo>∑</mo><mi>i</mi></msub><msubsup><mi>λ</mi><mi>i</mi><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">(\sum_i\lambda_i)^2/\sum_i\lambda_i^2</annotation></semantics></math>.
 The resulting ratio of global to local dimensions is an empirical
 folding signature, not a topological proof.</p>
-<p><img src="assets/jepa-physical-vs-tag-latent-sweeps.png"
-alt="Physical-content and tag-only sweeps in a two-dimensional JEPA projection" /></p>
+<figure>
+<img src="assets/jepa-physical-vs-tag-latent-sweeps.png"
+alt="Physical-content and tag-only sweeps in a two-dimensional JEPA projection" />
+<figcaption aria-hidden="true">Physical-content and tag-only sweeps in a
+two-dimensional JEPA projection</figcaption>
+</figure>
 <p><em>Figure 4. In JEPA, a smooth physical change barely moves the
 projected latent, while a tag-only change traces a visible path. The
 20.87× statistic is computed from path lengths in the full latent space
@@ -216,8 +235,12 @@ of an entire reachable set.</p>
 Prediction still supplies rich variation. These two action-based tasks
 say what the shared representation must keep distinguishable for
 control.</p>
-<p><img src="assets/deck-10.png"
-alt="Predictive evidence and action-derived control evidence" /></p>
+<figure>
+<img src="assets/deck-10.png"
+alt="Predictive evidence and action-derived control evidence" />
+<figcaption aria-hidden="true">Predictive evidence and action-derived
+control evidence</figcaption>
+</figure>
 <p><em>Figure 5. The full training pipeline. Prediction, inverse action,
 reachability, and SIGReg all touch the shared representation, but only
 prediction’s gradient on shared encoder parameters is routed.
@@ -267,8 +290,12 @@ is approximate and the optimization landscape is curved. This is a
 <strong>local first-order explanation for one protected
 direction</strong>, not a guarantee that control loss never rises or
 that we have identified every control-relevant factor.</p>
-<p><img src="assets/deck-11.png"
-alt="Local gradient routing and its first-order interpretation" /></p>
+<figure>
+<img src="assets/deck-11.png"
+alt="Local gradient routing and its first-order interpretation" />
+<figcaption aria-hidden="true">Local gradient routing and its
+first-order interpretation</figcaption>
+</figure>
 <p><em>Figure 6. The EMA provides a smoother local reference than a
 single minibatch control gradient. The router removes prediction’s
 component along that reference. Exact first-order neutrality requires
@@ -304,8 +331,12 @@ probe is negative, while ours becomes positive. High tag
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math>
 after training is an important control: the tag may remain decodable
 without dominating planning.</p>
-<p><img src="assets/deck-14.png"
-alt="Frozen linear probes of physical state and tag RGB" /></p>
+<figure>
+<img src="assets/deck-14.png"
+alt="Frozen linear probes of physical state and tag RGB" />
+<figcaption aria-hidden="true">Frozen linear probes of physical state
+and tag RGB</figcaption>
+</figure>
 <p><em>Figure 7. Physical state becomes easier to read from frozen
 representations, while the tag remains linearly readable. Decodability
 alone does not establish which feature controls the metric or the
@@ -335,8 +366,12 @@ these fall to about <strong>6.67 directions</strong> and
 <strong>2.29×</strong>. The tag’s latent effect is not forced to zero;
 it is much less spread across the global geometry. These are comparative
 effective-dimension diagnostics, not proof of a manifold’s topology.</p>
-<p><img src="assets/deck-18.png"
-alt="Comparison of tag-only global effective dimension and folding" /></p>
+<figure>
+<img src="assets/deck-18.png"
+alt="Comparison of tag-only global effective dimension and folding" />
+<figcaption aria-hidden="true">Comparison of tag-only global effective
+dimension and folding</figcaption>
+</figure>
 <p><em>Figure 8. The nuisance remains represented, but its variation
 occupies fewer global effective directions. Local dimension is estimated
 from neighbor distances; global dimension is a covariance participation
@@ -366,8 +401,12 @@ absolute effect measures the magnitude of its impact on cost. The
 heatmaps and the two pairs of numbers all describe the same matched
 example. The fixed-candidate intervention rates above provide the
 aggregate decision evidence.</p>
-<p><img src="assets/deck-16.png"
-alt="Spatial intervention sensitivity of planning costs" /></p>
+<figure>
+<img src="assets/deck-16.png"
+alt="Spatial intervention sensitivity of planning costs" />
+<figcaption aria-hidden="true">Spatial intervention sensitivity of
+planning costs</figcaption>
+</figure>
 <p><em>Figure 9. In this matched scene, JEPA’s planning-cost sensitivity
 concentrates on the corner tag; our model responds more to the pusher
 and block. This illustrates what the planner uses rather than what the
@@ -389,8 +428,12 @@ normalized by the standard deviation of the reference costs. Pair-order
 reversal is the fraction of non-tied candidate pairs whose relative
 ordering flips. The three measurements respectively test the final
 choice, the cost landscape, and the ranking.</p>
-<p><img src="assets/deck-19.png"
-alt="Counterfactual tag intervention on fixed candidate actions" /></p>
+<figure>
+<img src="assets/deck-19.png"
+alt="Counterfactual tag intervention on fixed candidate actions" />
+<figcaption aria-hidden="true">Counterfactual tag intervention on fixed
+candidate actions</figcaption>
+</figure>
 <p><em>Figure 10. With the physical scene, goal, and action bank
 unchanged, changing the nuisance tag much less often changes our model’s
 selected candidate or relative costs.</em></p>
@@ -408,12 +451,50 @@ Instead, the learned model still supports planning when the synthetic
 nuisance is absent. The clean-task baseline comparisons are informative
 but not all from a fully matched protocol, so our strongest causal
 evidence remains the controlled Tagged PushT interventions.</p>
-<p><img src="assets/deck-20.png"
-alt="Online CEM planning success across clean control tasks" /></p>
+<figure>
+<img src="assets/deck-20.png"
+alt="Online CEM planning success across clean control tasks" />
+<figcaption aria-hidden="true">Online CEM planning success across clean
+control tasks</figcaption>
+</figure>
 <p><em>Figure 11. The routed model retains strong pilot performance
 across clean tasks. The main comparison is within the controlled Tagged
 PushT setting; cross-source clean baselines should be treated
 cautiously.</em></p>
+<h3 id="four-example-rollouts">Four example rollouts</h3>
+<p>The animations below show two successful episodes per task under our
+model. They are qualitative examples of the online planner in motion,
+not matched JEPA-versus-ours comparisons or additional success-rate
+measurements. The percentages above come from the full 50-episode
+evaluations.</p>
+<div class="rollout-grid">
+<figure>
+<img src="assets/rollout-tagged-pusht.gif" alt="Two successful Tagged PushT episodes showing the pusher moving the T-shaped block toward its goal while an episode-constant corner tag remains visible" loading="lazy">
+<figcaption>
+<strong>Tagged PushT.</strong> The 5×5 tag remains visible during both
+successful pushes.
+</figcaption>
+</figure>
+<figure>
+<img src="assets/rollout-reacher.gif" alt="Two successful Reacher episodes showing the controlled arm approaching the recorded goal pose" loading="lazy">
+<figcaption>
+<strong>Reacher.</strong> The controlled arm reaches the recorded goal
+pose.
+</figcaption>
+</figure>
+<figure>
+<img src="assets/rollout-tworoom.gif" alt="Two successful TwoRoom episodes showing the agent navigating across rooms toward a goal" loading="lazy">
+<figcaption>
+<strong>TwoRoom.</strong> Both examples cross between rooms.
+</figcaption>
+</figure>
+<figure>
+<img src="assets/rollout-cube.gif" alt="Two successful Cube manipulation episodes showing the robot and goal images" loading="lazy">
+<figcaption>
+<strong>Cube.</strong> Two successful manipulation trajectories.
+</figcaption>
+</figure>
+</div>
 <h2 id="what-this-result-does-and-does-not-establish">What this result
 does, and does not, establish</h2>
 <p>The 5×5 tag is a deliberately controlled nuisance. It lets us change

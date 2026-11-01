@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">Three diagnostics of control-relevant representation learning</title>
+  <desc id="desc">JEPA versus our control-supported model: tag-to-physical latent path ratio 20.87 versus 1.42, tag-induced candidate selection changes 69.53 versus 7.03 percent, and Tagged PushT planning success 4 versus 88 percent.</desc>
+  <rect width="1200" height="650" fill="#fff"/>
+  <style>text{font-family:Arial,Helvetica,sans-serif;fill:#142b42}.h{font-size:31px;font-weight:700}.sub{font-size:18px;fill:#607286}.ph{font-size:21px;font-weight:700}.lab{font-size:17px}.num{font-size:19px;font-weight:700}.small{font-size:15px;fill:#607286}</style>
+  <text x="55" y="68" class="h">Prediction can dominate the wrong geometry</text>
+  <text x="55" y="101" class="sub">Matched representation and planner diagnostics on Tagged PushT</text>
+  <rect x="55" y="140" width="1090" height="132" rx="14" fill="#f5f8fb"/>
+  <text x="78" y="176" class="ph">Tag / physical latent path length</text>
+  <text x="78" y="206" class="small">Lower means less latent distance allocated to the tag</text>
+  <text x="518" y="190" class="lab">JEPA</text><rect x="594" y="168" width="425" height="28" rx="4" fill="#c45d31"/><text x="1030" y="190" class="num">20.87×</text>
+  <text x="518" y="241" class="lab">Ours</text><rect x="594" y="219" width="29" height="28" rx="4" fill="#148a78"/><text x="634" y="241" class="num">1.42×</text>
+  <rect x="55" y="290" width="1090" height="132" rx="14" fill="#f5f8fb"/>
+  <text x="78" y="326" class="ph">Selected action candidate changes</text>
+  <text x="78" y="356" class="small">Only the 5×5 tag changes; 32 candidates remain fixed</text>
+  <text x="518" y="340" class="lab">JEPA</text><rect x="594" y="318" width="425" height="28" rx="4" fill="#c45d31"/><text x="1030" y="340" class="num">69.53%</text>
+  <text x="518" y="391" class="lab">Ours</text><rect x="594" y="369" width="43" height="28" rx="4" fill="#148a78"/><text x="649" y="391" class="num">7.03%</text>
+  <rect x="55" y="440" width="1090" height="132" rx="14" fill="#f5f8fb"/>
+  <text x="78" y="476" class="ph">Closed-loop planning success</text>
+  <text x="78" y="506" class="small">Tagged PushT; 50 evaluation episodes per model</text>
+  <text x="518" y="490" class="lab">JEPA</text><rect x="594" y="468" width="19" height="28" rx="4" fill="#c45d31"/><text x="625" y="490" class="num">4%</text>
+  <text x="518" y="541" class="lab">Ours</text><rect x="594" y="519" width="425" height="28" rx="4" fill="#148a78"/><text x="1030" y="541" class="num">88%</text>
+  <text x="55" y="617" class="small">Each panel has its own scale. These are distinct measurements, not interchangeable success rates.</text>
+</svg>

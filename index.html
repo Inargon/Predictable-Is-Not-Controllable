@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Beyond the Obsessed Encoder</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="assets/article.css" />
+</head>
+<body>
+<h1
+id="beyond-the-obsessed-encoder-let-control-shape-the-latent-space">Beyond
+the Obsessed Encoder: Let Control Shape the Latent Space</h1>
+<p><em>By Changchen Song and Jiahang Cao</em></p>
+<p><em>Independent research inspired by <a
+href="https://www.enigma.inc/posts/obsessed-encoder">Enigma
+Incorporated’s original post</a> · October 2026 pilot · <a
+href="assets/project-presentation.pdf">Presentation</a></em></p>
+<p><strong>TL;DR.</strong> A visual world model can predict well, avoid
+representation collapse, and still organize its latent space around a
+feature that has nothing to do with control. On Tagged PushT, a 5×5
+episode-constant color patch coincides with a JEPA baseline’s planning
+success falling from 96% on clean data to 4%. We use action-derived
+objectives to define a local control direction, then prevent prediction
+from updating the shared encoder along that direction. In a single-seed
+pilot, Tagged PushT success reaches 88%, while changing only the tag is
+much less likely to change the planner’s decision.</p>
+<p><img src="assets/key-results.svg"
+alt="Three separate diagnostics comparing JEPA and our model" /></p>
+<p><em>Figure 1. Three measurements of the same failure and its
+mitigation. The panels have different scales and denominators:
+full-space latent path length, fixed-candidate counterfactual decisions,
+and closed-loop task success.</em></p>
+<h2 id="a-tiny-patch-with-an-outsized-effect">A tiny patch with an
+outsized effect</h2>
+<p>Imagine a robot trying to push a T-shaped block to a goal. We add a
+5×5 RGB square in the corner of each observation. Its color is fixed
+within an episode and varies across episodes. The patch changes no
+action, physical trajectory, goal, or success condition. It is
+deliberately easy to predict and useless for acting.</p>
+<p>This is a controlled modification of PushT rather than a new physical
+environment. We retain the expert trajectories and actions. The RGB
+value is selected reproducibly from the episode identity and inserted
+into the observation during data loading. Both training and evaluation
+use tagged observations, so the question is not whether the model
+survives a tag appearing only at test time. It is whether a persistent
+but task-irrelevant visual factor redirects what the representation
+learns during training.</p>
+<p>Yet the baseline world model becomes preoccupied with it. The encoder
+remains non-collapsed: different observations still produce different
+representations. The problem is <strong>allocation</strong>. Latent
+distance responds strongly to the persistent patch and weakly to
+physical motion. A planner that compares predicted and goal latents
+inherits this distorted geometry.</p>
+<p>Our motivation comes from <a
+href="https://www.enigma.inc/posts/obsessed-encoder">Enigma
+Incorporated’s <em>The Obsessed Encoder</em></a>. This is an independent
+follow-up: if predictive learning discovers an easy shortcut, what tells
+the shared representation which changes matter for action? Our answer is
+to use evidence already present in action-labeled trajectories.</p>
+<h3 id="the-world-model-loop">The world-model loop</h3>
+<p>The current and future observations pass through the <strong>same
+encoder and projector</strong>, yielding
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>z</mi><mi>t</mi></msub><annotation encoding="application/x-tex">z_t</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>z</mi><mrow><mi>t</mi><mo>+</mo><mi>h</mi></mrow></msub><annotation encoding="application/x-tex">z_{t+h}</annotation></semantics></math>.
+An action-conditioned predictor takes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>z</mi><mi>t</mi></msub><annotation encoding="application/x-tex">z_t</annotation></semantics></math>
+and the intervening action sequence and produces
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>z</mi><mo accent="true">̂</mo></mover><mrow><mi>t</mi><mo>+</mo><mi>h</mi></mrow></msub><annotation encoding="application/x-tex">\hat z_{t+h}</annotation></semantics></math>.
+Prediction training aligns
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>z</mi><mo accent="true">̂</mo></mover><mrow><mi>t</mi><mo>+</mo><mi>h</mi></mrow></msub><annotation encoding="application/x-tex">\hat z_{t+h}</annotation></semantics></math>
+with the actual future encoding
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>z</mi><mrow><mi>t</mi><mo>+</mo><mi>h</mi></mrow></msub><annotation encoding="application/x-tex">z_{t+h}</annotation></semantics></math>;
+it does not simply pull
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>z</mi><mi>t</mi></msub><annotation encoding="application/x-tex">z_t</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>z</mi><mrow><mi>t</mi><mo>+</mo><mi>h</mi></mrow></msub><annotation encoding="application/x-tex">z_{t+h}</annotation></semantics></math>
+together. SIGReg acts on the encoded representations to discourage
+global collapse.</p>
+<p>For planning, we sample candidate action sequences, roll each through
+the predictor, compare the predicted endpoint with a goal latent,
+execute the first action of the best sequence, and repeat. This is
+online CEM planning in a learned latent space. A low prediction loss is
+useful, but planning additionally requires distances between latents to
+respond to the physical differences that matter for action.</p>
+<p><img src="assets/deck-03.png"
+alt="Action-conditioned latent prediction and latent-space planning" /></p>
+<p><em>Figure 2. The encoder supplies the geometry used by both
+prediction and planning. The predictor estimates future latents for
+candidate action sequences; the planner ranks the resulting endpoints
+against a goal.</em></p>
+<h2 id="why-prediction-can-choose-the-wrong-feature">Why prediction can
+choose the wrong feature</h2>
+<p>In an action-conditioned latent world model, an encoder maps an
+observation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>o</mi><mi>t</mi></msub><annotation encoding="application/x-tex">o_t</annotation></semantics></math>
+to a latent
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>z</mi><mi>t</mi></msub><annotation encoding="application/x-tex">z_t</annotation></semantics></math>.
+A predictor receives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>z</mi><mi>t</mi></msub><annotation encoding="application/x-tex">z_t</annotation></semantics></math>
+and an action sequence
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mrow><mi>t</mi><mo>,</mo><mi>h</mi></mrow></msub><annotation encoding="application/x-tex">A_{t,h}</annotation></semantics></math>
+and predicts a future latent. Training aligns that prediction with the
+encoded future observation. At planning time, the model evaluates
+candidate action sequences by the distance between their predicted
+endpoints and a goal latent.</p>
+<p>Persistent features are attractive to a temporal alignment objective.
+For a standardized scalar feature
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>
+whose values at two paired times have correlation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ρ</mi><mi>u</mi></msub><annotation encoding="application/x-tex">\rho_u</annotation></semantics></math>,
+direct squared alignment has expected cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>ρ</mi><mi>u</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">2(1-\rho_u)</annotation></semantics></math>.
+A feature that hardly changes has low alignment cost. This identity
+illustrates the preference; it is <strong>not</strong> the complete loss
+of an action-conditioned predictor.</p>
+<p>There is a positive theoretical picture too. Under specific Gaussian
+latent and transition assumptions, <a
+href="https://arxiv.org/abs/2605.26379">Klindt, LeCun, and
+Balestriero</a> show how LeJEPA’s alignment plus Gaussian regularization
+can recover a world latent up to an orthogonal transformation.
+Orthogonal transformations preserve Euclidean distance, exactly the
+property latent-space planning would like. That result supplies an ideal
+case, not a theorem about our action-conditioned PushT setup. Our
+episode-constant patch deliberately creates a factor with a different
+temporal correlation from the changing physical state.</p>
+<p><img src="assets/deck-07.png"
+alt="Why a slow nuisance is easy to align" /></p>
+<p><em>Figure 3. For a standardized feature direction, stronger temporal
+correlation lowers the direct alignment cost. The slide illustrates the
+optimization pressure; the complete predictive model also conditions on
+actions.</em></p>
+<p>On Tagged PushT, the physical state evolves under actions, while the
+patch is constant during an episode. The patch is therefore a slow,
+predictable factor. SIGReg can prevent the trivial solution in which
+every observation maps to one vector, but a healthy aggregate embedding
+distribution does not specify <em>which</em> factor should occupy its
+geometry. The <a href="https://arxiv.org/abs/2605.26379">LeJEPA
+identifiability result</a> gives a positive guarantee under particular
+latent distributions and transition assumptions. Our controlled nuisance
+violates the shared temporal-structure intuition behind the idealized
+setting; we do not claim to extend that theorem to our
+action-conditioned model.</p>
+<p>We measure the misallocation directly. Across matched sweeps,
+tag-only changes produce <strong>20.87×</strong> the full-space latent
+path length of comparable physical changes in JEPA. A separate tag-only
+probe fixes the physical pixels and varies RGB values: local changes are
+estimated at about <strong>2.88 dimensions</strong>, yet their global
+covariance spans about <strong>49.85 effective directions</strong>. The
+latter is an empirical effective-dimension statistic, not a claim that
+the tag contains 50 independent physical variables.</p>
+<p>For the path measurement, a smooth intervention produces latents
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mn>0</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>z</mi><mi>T</mi></msub></mrow><annotation encoding="application/x-tex">z_0,\ldots,z_T</annotation></semantics></math>.
+We sum
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mrow><mo stretchy="true" form="prefix">‖</mo><msub><mi>z</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>z</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">‖</mo></mrow><mn>2</mn></msub><annotation encoding="application/x-tex">\lVert z_{i+1}-z_i\rVert_2</annotation></semantics></math>
+in the <strong>full projector space</strong>, normalize by a shared
+reference scale, and compare matched tag-only and physical-content
+sweeps. A PCA plot is only a two-dimensional view. For the folding
+probe, local intrinsic dimension is estimated from nearest-neighbor
+distance ratios; global effective dimension is the participation ratio
+of the tag-induced covariance eigenvalues,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mo>∑</mo><mi>i</mi></msub><msub><mi>λ</mi><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>/</mi><msub><mo>∑</mo><mi>i</mi></msub><msubsup><mi>λ</mi><mi>i</mi><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">(\sum_i\lambda_i)^2/\sum_i\lambda_i^2</annotation></semantics></math>.
+The resulting ratio of global to local dimensions is an empirical
+folding signature, not a topological proof.</p>
+<p><img src="assets/jepa-physical-vs-tag-latent-sweeps.png"
+alt="Physical-content and tag-only sweeps in a two-dimensional JEPA projection" /></p>
+<p><em>Figure 4. In JEPA, a smooth physical change barely moves the
+projected latent, while a tag-only change traces a visible path. The
+20.87× statistic is computed from path lengths in the full latent space
+over 128 matched trajectories; the projection illustrates the behavior
+but does not define the metric.</em></p>
+<h2 id="give-control-a-say-in-the-shared-encoder">Give control a say in
+the shared encoder</h2>
+<p>We add two forms of action-derived evidence. An
+<strong>inverse-action</strong> objective asks whether the start and
+endpoint latents retain enough information to recover the intervening
+action. A <strong>reachability</strong> objective asks which candidate
+future state follows from a start state and action sequence. Neither
+objective requires privileged object-position labels from the
+simulator.</p>
+<p>The inverse head predicts the action sequence from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mi>t</mi></msub><mo>,</mo><msub><mi>z</mi><mrow><mi>t</mi><mo>+</mo><mi>h</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(z_t,z_{t+h})</annotation></semantics></math>
+and receives a Smooth L1 loss against the observed actions. Reachability
+reverses the question: given
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>z</mi><mi>t</mi></msub><annotation encoding="application/x-tex">z_t</annotation></semantics></math>
+and the actions, which endpoint actually followed? In the configuration
+reported here, each query selects among <strong>four states from the
+same episode</strong>: one correct future endpoint and three other-time
+candidates. They all share the constant tag. A tag-only strategy
+therefore cannot pick the correct endpoint; the model must preserve
+action-conditioned distinctions among states. This is an
+endpoint-identification task over observed candidates, not an estimate
+of an entire reachable set.</p>
+<p>Together they form
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>L</mi><mi>c</mi></msub><mo>=</mo><msub><mi>L</mi><mrow><mi mathvariant="normal">i</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">v</mi></mrow></msub><mo>+</mo><msub><mi>λ</mi><mi>r</mi></msub><msub><mi>L</mi><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">h</mi></mrow></msub></mrow><annotation encoding="application/x-tex">L_c=L_{\mathrm{inv}}+\lambda_rL_{\mathrm{reach}}</annotation></semantics></math>.
+Prediction still supplies rich variation. These two action-based tasks
+say what the shared representation must keep distinguishable for
+control.</p>
+<p><img src="assets/deck-10.png"
+alt="Predictive evidence and action-derived control evidence" /></p>
+<p><em>Figure 5. The full training pipeline. Prediction, inverse action,
+reachability, and SIGReg all touch the shared representation, but only
+prediction’s gradient on shared encoder parameters is routed.
+Predictor-private parameters keep their full prediction update.</em></p>
+<p>These objectives provide a control loss
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mi>c</mi></msub><annotation encoding="application/x-tex">L_c</annotation></semantics></math>,
+but simply adding
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mi>c</mi></msub><annotation encoding="application/x-tex">L_c</annotation></semantics></math>
+to prediction does not resolve how competing gradients modify the
+<em>shared</em> encoder. We therefore route only the predictive gradient
+on its parameters
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>g</mi><mi>c</mi></msub><mo>=</mo><msub><mi>∇</mi><mi>θ</mi></msub><msub><mi>L</mi><mi>c</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>g</mi><mi>p</mi></msub><mo>=</mo><msub><mi>∇</mi><mi>θ</mi></msub><msub><mi>L</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">d</mi></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>m</mi><mi>t</mi></msub><mo>=</mo><mi>β</mi><msub><mi>m</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><msub><mi>g</mi><mi>c</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
+g_c=\nabla_\theta L_c,\qquad g_p=\nabla_\theta L_{\mathrm{pred}},\qquad
+m_t=\beta m_{t-1}+(1-\beta)g_c,
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>g</mi><mrow><mi>p</mi><mo>⟂</mo></mrow></msub><mo>=</mo><msub><mi>g</mi><mi>p</mi></msub><mo>−</mo><mfrac><mrow><msubsup><mi>g</mi><mi>p</mi><mi>⊤</mi></msubsup><msub><mi>m</mi><mi>t</mi></msub></mrow><mrow><msup><mrow><mo stretchy="true" form="prefix">‖</mo><msub><mi>m</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">‖</mo></mrow><mn>2</mn></msup><mo>+</mo><mi>ϵ</mi></mrow></mfrac><msub><mi>m</mi><mi>t</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+g_{p\perp}=g_p-\frac{g_p^\top m_t}{\lVert m_t\rVert^2+\epsilon}m_t.
+</annotation></semantics></math></p>
+<p>Here
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>m</mi><mi>t</mi></msub><annotation encoding="application/x-tex">m_t</annotation></semantics></math>
+is an exponential moving average of the <strong>control
+gradient</strong>. It smooths the reference direction across
+minibatches; it is not an EMA of target-encoder parameters. The control
+gradient still updates the encoder in full. The predictor’s private
+parameters still receive the full prediction gradient. Only prediction’s
+contribution to the shared encoder loses its component along the control
+reference.</p>
+<p>Including the regularizer, the shared update is proportional to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>g</mi><mi>c</mi></msub><mo>+</mo><msub><mi>λ</mi><mi>p</mi></msub><msub><mi>g</mi><mrow><mi>p</mi><mo>⟂</mo></mrow></msub><mo>+</mo><msub><mi>g</mi><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">g</mi></mrow></msub></mrow><annotation encoding="application/x-tex">g_c+\lambda_p g_{p\perp}+g_{\mathrm{reg}}</annotation></semantics></math>.
+This asymmetry matters. We do not turn down all predictive learning to
+make control win by brute force. We limit one way prediction can
+directly rewrite a locally control-sensitive direction, while leaving
+its other parameter directions and its private predictor available.</p>
+<p>Why does this make sense? Near the current parameters, the
+first-order change in control loss from a small prediction-only step
+depends on the inner product between
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>g</mi><mi>c</mi></msub><annotation encoding="application/x-tex">g_c</annotation></semantics></math>
+and that step. If the reference
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>m</mi><mi>t</mi></msub><annotation encoding="application/x-tex">m_t</annotation></semantics></math>
+equals
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>g</mi><mi>c</mi></msub><annotation encoding="application/x-tex">g_c</annotation></semantics></math>,
+the routed prediction step is orthogonal to it, so that first-order term
+vanishes. In practice
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>m</mi><mi>t</mi></msub><annotation encoding="application/x-tex">m_t</annotation></semantics></math>
+is approximate and the optimization landscape is curved. This is a
+<strong>local first-order explanation for one protected
+direction</strong>, not a guarantee that control loss never rises or
+that we have identified every control-relevant factor.</p>
+<p><img src="assets/deck-11.png"
+alt="Local gradient routing and its first-order interpretation" /></p>
+<p><em>Figure 6. The EMA provides a smoother local reference than a
+single minibatch control gradient. The router removes prediction’s
+component along that reference. Exact first-order neutrality requires
+the reference to equal the current control gradient and a sufficiently
+small step.</em></p>
+<h2 id="follow-the-evidence-from-features-to-decisions">Follow the
+evidence from features to decisions</h2>
+<p>We evaluate three different questions: <strong>Is physical state
+readable? What organizes latent distance? Does the nuisance change a
+planning decision?</strong> Closed-loop success then tests whether the
+resulting representation remains useful for behavior. A linear probe
+alone cannot answer all four. In the reported pilot, we use frozen
+representations for probes and planning, 128 matched trajectories for
+the path comparison, fixed banks of 32 actions for decision
+interventions, and 50 episodes per task for online CEM success. These
+protocols answer different questions and their percentages must not be
+conflated.</p>
+<p><strong>Information present.</strong> With frozen projection-space
+representations on Tagged PushT, mean linear-probe
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math>
+for pusher position, block position, and block angle rises from about
+<strong>0.15</strong> for JEPA to <strong>0.88</strong> for our model.
+The tag remains readable: its RGB probe
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math>
+changes only from about <strong>0.95</strong> to <strong>0.92</strong>.
+The method is not merely deleting color information.</p>
+<p>To compute a probe, we freeze the encoder and projector, fit a linear
+regressor on a training split, and evaluate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mn>2</mn></msup><mo>=</mo><mn>1</mn><mo>−</mo><msub><mo>∑</mo><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>/</mi><msub><mo>∑</mo><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><mover><mi>y</mi><mo accent="true">‾</mo></mover><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">R^2=1-\sum_i(y_i-\hat y_i)^2/\sum_i(y_i-\bar y)^2</annotation></semantics></math>
+on held-out samples. A value of one is perfect; zero matches a
+constant-mean prediction; negative values are worse. JEPA’s block-angle
+probe is negative, while ours becomes positive. High tag
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math>
+after training is an important control: the tag may remain decodable
+without dominating planning.</p>
+<p><img src="assets/deck-14.png"
+alt="Frozen linear probes of physical state and tag RGB" /></p>
+<p><em>Figure 7. Physical state becomes easier to read from frozen
+representations, while the tag remains linearly readable. Decodability
+alone does not establish which feature controls the metric or the
+planner.</em></p>
+<p><strong>Geometry allocated.</strong> The matched tag-to-physical
+latent path-length ratio falls from <strong>20.87×</strong> to
+<strong>1.42×</strong>. This ratio uses paths in the full representation
+space, not distances measured on a two-dimensional PCA plot. In
+paired-image comparisons, shared physical content becomes more similar
+despite different tags (centered cosine <strong>0.021 → 0.469</strong>),
+while shared tag identity becomes less similar when physical content
+differs (<strong>0.852 → 0.215</strong>).</p>
+<p>The centered-cosine tests deliberately swap what is held constant. In
+one set of image pairs, physical content is fixed and tag color changes;
+in the other, tag color is fixed and physical content changes. We
+subtract the representation mean before taking cosine similarity. JEPA
+considers images with the same tag but different content much more
+similar than images with the same content but different tags. With our
+model, that relationship reverses. The result is about
+<em>organization</em> of the representation, not whether a linear probe
+can still decode the color.</p>
+<p>The tag-folding probe offers another view. When physical pixels are
+held fixed and only RGB varies, JEPA’s tag-induced covariance has about
+<strong>49.85 global effective directions</strong> and a
+<strong>17.30×</strong> global-to-local dimension ratio. In our model
+these fall to about <strong>6.67 directions</strong> and
+<strong>2.29×</strong>. The tag’s latent effect is not forced to zero;
+it is much less spread across the global geometry. These are comparative
+effective-dimension diagnostics, not proof of a manifold’s topology.</p>
+<p><img src="assets/deck-18.png"
+alt="Comparison of tag-only global effective dimension and folding" /></p>
+<p><em>Figure 8. The nuisance remains represented, but its variation
+occupies fewer global effective directions. Local dimension is estimated
+from neighbor distances; global dimension is a covariance participation
+ratio.</em></p>
+<p><strong>Decisions affected.</strong> We hold the physical scene,
+goal, and <strong>32 candidate action sequences</strong> fixed and
+change only the 5×5 tag. The selected candidate changes in
+<strong>69.53%</strong> of JEPA cases and <strong>7.03%</strong> of
+ours. Normalized candidate-cost distortion falls from
+<strong>58.36%</strong> to <strong>10.78%</strong>; pairwise ordering
+reversals fall from <strong>9.84%</strong> to <strong>2.27%</strong>.
+These are offline matched interventions, not additional closed-loop
+success rates.</p>
+<p>We also perturb spatial tiles one at a time and measure how candidate
+planning costs respond. In the matched scene illustrated below, the tag
+accounts for <strong>91.8%</strong> of JEPA’s spatial sensitivity,
+versus <strong>17.6%</strong> in our model; its absolute cost effect
+falls from <strong>68.43</strong> to <strong>0.77</strong>. This is an
+illustrative scene-level comparison, not the aggregate rate across
+evaluation clips. The planner can still see the tag, but the example
+shows costs responding more to task-relevant scene content under our
+model.</p>
+<p>For each tile, we keep the scene and candidate actions fixed, perturb
+that region, and recompute candidate planning costs. The tag share is
+its share of total spatial sensitivity across tiles in this scene; the
+absolute effect measures the magnitude of its impact on cost. The
+heatmaps and the two pairs of numbers all describe the same matched
+example. The fixed-candidate intervention rates above provide the
+aggregate decision evidence.</p>
+<p><img src="assets/deck-16.png"
+alt="Spatial intervention sensitivity of planning costs" /></p>
+<p><em>Figure 9. In this matched scene, JEPA’s planning-cost sensitivity
+concentrates on the corner tag; our model responds more to the pusher
+and block. This illustrates what the planner uses rather than what the
+encoder can decode.</em></p>
+<p>For the fixed-candidate decision test, let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
+be the vectors of 32 candidate costs before and after changing the tag.
+“Selected candidate changed” checks whether
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">arg</mi><mo>&#8289;</mo></mrow><msub><mrow><mi mathvariant="normal">min</mi><mo>&#8289;</mo></mrow><mi>i</mi></msub><msub><mi>a</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">\arg\min_i a_i</annotation></semantics></math>
+differs from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">arg</mi><mo>&#8289;</mo></mrow><msub><mrow><mi mathvariant="normal">min</mi><mo>&#8289;</mo></mrow><mi>i</mi></msub><msub><mi>b</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">\arg\min_i b_i</annotation></semantics></math>.
+Cost distortion is the root-mean-square difference between
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>,
+normalized by the standard deviation of the reference costs. Pair-order
+reversal is the fraction of non-tied candidate pairs whose relative
+ordering flips. The three measurements respectively test the final
+choice, the cost landscape, and the ranking.</p>
+<p><img src="assets/deck-19.png"
+alt="Counterfactual tag intervention on fixed candidate actions" /></p>
+<p><em>Figure 10. With the physical scene, goal, and action bank
+unchanged, changing the nuisance tag much less often changes our model’s
+selected candidate or relative costs.</em></p>
+<p><strong>Behavior retained.</strong> Under the reported online CEM
+evaluation, our model succeeds on <strong>44 of 50 Tagged PushT episodes
+(88%)</strong>, compared with <strong>4%</strong> for the JEPA baseline.
+The same method reaches <strong>92%</strong> on Clean PushT,
+<strong>88%</strong> on Reacher, <strong>96%</strong> on TwoRoom, and
+<strong>80%</strong> on Cube, each over 50 evaluation episodes. These
+are pilot results, not a claim of state-of-the-art performance across
+tasks or robots.</p>
+<p>The clean tasks matter because a trivial way to resist the tag would
+be to suppress predictive learning or freeze the representation.
+Instead, the learned model still supports planning when the synthetic
+nuisance is absent. The clean-task baseline comparisons are informative
+but not all from a fully matched protocol, so our strongest causal
+evidence remains the controlled Tagged PushT interventions.</p>
+<p><img src="assets/deck-20.png"
+alt="Online CEM planning success across clean control tasks" /></p>
+<p><em>Figure 11. The routed model retains strong pilot performance
+across clean tasks. The main comparison is within the controlled Tagged
+PushT setting; cross-source clean baselines should be treated
+cautiously.</em></p>
+<h2 id="what-this-result-does-and-does-not-establish">What this result
+does, and does not, establish</h2>
+<p>The 5×5 tag is a deliberately controlled nuisance. It lets us change
+one visual factor while keeping the physical trajectory and candidate
+actions fixed. Real control data contain camera motion, lighting,
+backgrounds, object identity, and task context; some persistent factors
+genuinely matter for action. Our router does not classify features as
+nuisances or guarantee that all useful geometry is preserved.</p>
+<p>The main planning results use <strong>one training seed</strong>,
+evaluation seed 42, and <strong>50 episodes per task</strong>. Some
+clean-task baseline comparisons come from different experimental
+sources, so we do not treat them as fully matched superiority claims.
+More seeds, stronger baselines, larger visual domains, and cross-robot
+tests are needed before making broader generalization claims. This post
+reports the parameter-space EMA router and the saved October
+presentation; later experimental variants are separate and their results
+are not pooled here.</p>
+<p>What the present evidence supports is narrower and useful:
+action-derived objectives can provide a local criterion for how
+prediction updates a shared representation. In this controlled setting,
+that criterion reduces nuisance dominance in latent distance, planner
+costs, and action selection while retaining predictive learning.</p>
+<p><strong>Predict what you can. Represent what changes
+decisions.</strong></p>
+<hr />
+<h3 id="sources-and-project-materials">Sources and project
+materials</h3>
+<ul>
+<li><a href="https://www.enigma.inc/posts/obsessed-encoder">The Obsessed
+Encoder</a>, Enigma Incorporated.</li>
+<li><a href="https://arxiv.org/abs/2605.26379">When Does LeJEPA Learn a
+World Model?</a>, Klindt, LeCun, and Balestriero.</li>
+<li><a href="https://arxiv.org/abs/2603.19312">LeWorldModel</a> and its
+<a href="https://github.com/lucas-maes/le-wm">official code</a>.</li>
+<li><a href="assets/project-presentation.pdf">Project presentation:
+<em>How Do We Fix an Obsessed Encoder?</em></a> (October 2026). Figures
+and reported metrics above follow the presentation and its saved
+experiment audit.</li>
+<li><a
+href="https://github.com/Enigma-Incorporated/The-Obsessed-Encoder/tree/experiment/randgoal-decision-aligned">Development
+implementation branch</a>, hosted in the original repository. This
+independent post describes the parameter-space EMA routing pilot; later
+variants should be evaluated separately. Repository hosting does not
+imply affiliation with Enigma Incorporated.</li>
+</ul>
+</body>
+</html>

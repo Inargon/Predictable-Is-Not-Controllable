@@ -72,6 +72,24 @@ use tagged observations, so the question is not whether the model
 survives a tag appearing only at test time. It is whether a persistent
 but task-irrelevant visual factor redirects what the representation
 learns during training.</p>
+<div class="concept-grid">
+<figure>
+<img src="assets/pusht-original-example.png" alt="Original PushT observation with a blue pusher, gray T-shaped block, and green goal">
+<figcaption>
+Original PushT observation
+</figcaption>
+</figure>
+<figure>
+<img src="assets/pusht-tagged-example.png" alt="Tagged PushT observation with a tiny green patch at the top-left, enlarged by a red callout">
+<figcaption>
+Tagged PushT: a 5×5 episode-constant RGB patch in the top-left corner
+</figcaption>
+</figure>
+</div>
+<p><em>Setup illustration. These are frames from different episodes, so
+their physical poses differ. In the controlled dataset, the sole added
+factor is the corner patch; actions, dynamics, goals, and success
+criteria are unchanged.</em></p>
 <p>Yet the baseline world model becomes preoccupied with it. The encoder
 remains non-collapsed: different observations still produce different
 representations. The problem is <strong>allocation</strong>. Latent

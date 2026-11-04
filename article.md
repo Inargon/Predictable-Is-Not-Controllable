@@ -1,4 +1,4 @@
-# Beyond the Obsessed Encoder: Let Control Shape the Latent Space
+# Predictable Is Not Controllable: Learning Latent Geometry for Planning
 
 *By Changchen Song and Jiahang Cao*
 

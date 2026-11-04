@@ -1,4 +1,4 @@
-# Beyond the Obsessed Encoder
+# Predictable Is Not Controllable
 
 **Let control shape the latent space of visual world models.**
 
@@ -11,7 +11,6 @@ The post links three kinds of evidence: latent allocation, fixed-candidate plann
 - [Read the post](index.html)
 - [Read the Markdown source](article.md)
 - [View the presentation](assets/project-presentation.pdf)
-- [Inspect the development implementation branch](https://github.com/Inargon/The-Obsessed-Encoder/tree/experiment/randgoal-decision-aligned) in the authors' personal fork
 
 The method discussed here is the **parameter-space EMA control-gradient router** from the saved October 2026 presentation. Later experimental variants are separate and their results are not pooled into the post.
 

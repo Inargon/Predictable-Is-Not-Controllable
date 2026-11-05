@@ -148,47 +148,59 @@ and predicts a future latent. Training aligns that prediction with the
 encoded future observation. At planning time, the model evaluates
 candidate action sequences by the distance between their predicted
 endpoints and a goal latent.</p>
-<p>Persistent features are attractive to a temporal alignment objective.
-For a standardized scalar feature
+<p>Persistent features are attractive to direct temporal alignment. Here
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>
-whose values at two paired times have correlation
+means any scalar feature direction, not the full physical state
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>.
+If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mi>t</mi></msub><annotation encoding="application/x-tex">u_t</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mrow><mi>t</mi><mo>+</mo><mi>h</mi></mrow></msub><annotation encoding="application/x-tex">u_{t+h}</annotation></semantics></math>
+each have zero mean and unit variance, and their correlation across a
+paired observation is
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ρ</mi><mi>u</mi></msub><annotation encoding="application/x-tex">\rho_u</annotation></semantics></math>,
-direct squared alignment has expected cost
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>ρ</mi><mi>u</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">2(1-\rho_u)</annotation></semantics></math>.
-A feature that hardly changes has low alignment cost. This identity
-illustrates the preference; it is <strong>not</strong> the complete loss
-of an action-conditioned predictor.</p>
-<p>There is a positive theoretical picture too. Under specific Gaussian
-latent and transition assumptions, <a
+then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝔼</mi><mo stretchy="false" form="prefix">[</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>u</mi><mi>t</mi></msub><mo>−</mo><msub><mi>u</mi><mrow><mi>t</mi><mo>+</mo><mi>h</mi></mrow></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="false" form="postfix">]</mo><mo>=</mo><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>ρ</mi><mi>u</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathbb{E}[(u_t-u_{t+h})^2]=2(1-\rho_u)</annotation></semantics></math>.
+Within an episode, the fixed tag has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ρ</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">g</mi></mrow></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\rho_{\mathrm{tag}}=1</annotation></semantics></math>
+by construction; a changing physical feature can have a lower
+correlation. This identity describes direct alignment,
+<strong>not</strong> the loss of our action-conditioned predictor:
+actions can make physical changes predictable too.</p>
+<p>There is a positive theoretical picture too. <a
 href="https://arxiv.org/abs/2605.26379">Klindt, LeCun, and
-Balestriero</a> show how LeJEPA’s alignment plus Gaussian regularization
-can recover a world latent up to an orthogonal transformation.
-Orthogonal transformations preserve Euclidean distance, exactly the
-property latent-space planning would like. That result supplies an ideal
-case, not a theorem about our action-conditioned PushT setup. Our
-episode-constant patch deliberately creates a factor with a different
-temporal correlation from the changing physical state.</p>
+Balestriero</a> consider isotropic Gaussian world latents with a shared
+transition coefficient
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>z</mi><mo>′</mo></msup><mo>=</mo><mi>ρ</mi><mi>z</mi><mo>+</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msup><mi>ρ</mi><mn>2</mn></msup></mrow></msqrt><mspace width="0.167em"></mspace><mi>ε</mi></mrow><annotation encoding="application/x-tex">z&#39;=\rho z+\sqrt{1-\rho^2}\,\varepsilon</annotation></semantics></math>.
+Under their stated assumptions, LeJEPA’s direct alignment together with
+Gaussian regularization recovers the world latent up to an orthogonal
+transformation. Orthogonal transformations preserve Euclidean distance,
+a useful property for latent-space planning. Their single
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>
+is an assumption about every latent coordinate’s transition; the
+feature-specific
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ρ</mi><mi>u</mi></msub><annotation encoding="application/x-tex">\rho_u</annotation></semantics></math>
+above is only a correlation used for the alignment illustration.</p>
 <figure>
 <img src="assets/deck-07.png"
 alt="Why a slow nuisance is easy to align" />
 <figcaption aria-hidden="true">Why a slow nuisance is easy to
 align</figcaption>
 </figure>
-<p><em>Figure 3. For a standardized feature direction, stronger temporal
-correlation lowers the direct alignment cost. The slide illustrates the
-optimization pressure; the complete predictive model also conditions on
-actions.</em></p>
+<p><em>Figure 3. For standardized scalar feature directions, higher
+within-episode temporal correlation lowers direct alignment cost. The
+comparison is an illustration, not a theorem about the
+action-conditioned prediction loss.</em></p>
 <p>On Tagged PushT, the physical state evolves under actions, while the
 patch is constant during an episode. The patch is therefore a slow,
-predictable factor. SIGReg can prevent the trivial solution in which
-every observation maps to one vector, but a healthy aggregate embedding
+predictable factor; the combined setting does not satisfy the paper’s
+common-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>
+transition model. SIGReg can prevent the trivial solution in which every
+observation maps to one vector, but a healthy aggregate embedding
 distribution does not specify <em>which</em> factor should occupy its
-geometry. The <a href="https://arxiv.org/abs/2605.26379">LeJEPA
-identifiability result</a> gives a positive guarantee under particular
-latent distributions and transition assumptions. Our controlled nuisance
-violates the shared temporal-structure intuition behind the idealized
-setting; we do not claim to extend that theorem to our
-action-conditioned model.</p>
+geometry. The LeJEPA theorem is an ideal reference case, not a guarantee
+for our action-conditioned PushT setup.</p>
 <p>We measure the misallocation directly. Across matched sweeps,
 tag-only changes produce <strong>20.87×</strong> the full-space latent
 path length of comparable physical changes in JEPA. A separate tag-only

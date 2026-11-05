@@ -21,7 +21,7 @@ This is a controlled modification of PushT rather than a new physical environmen
 <figure><img src="assets/pusht-tagged-example.png" alt="Tagged PushT observation with a tiny green patch at the top-left, enlarged by a red callout"><figcaption>Tagged PushT: a 5×5 episode-constant RGB patch in the top-left corner</figcaption></figure>
 </div>
 
-*Setup illustration. These are frames from different episodes, so their physical poses differ. In the controlled dataset, the sole added factor is the corner patch; actions, dynamics, goals, and success criteria are unchanged.*
+*Setup illustration. Image source: [Enigma Incorporated, The Obsessed Encoder](https://www.enigma.inc/posts/obsessed-encoder). These are frames from different episodes, so their physical poses differ. In the controlled dataset, the sole added factor is the corner patch; actions, dynamics, goals, and success criteria are unchanged.*
 
 Yet the baseline world model becomes preoccupied with it. The encoder remains non-collapsed: different observations still produce different representations. The problem is **allocation**. Latent distance responds strongly to the persistent patch and weakly to physical motion. A planner that compares predicted and goal latents inherits this distorted geometry.
 

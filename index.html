@@ -34,7 +34,6 @@ href="https://www.enigma.inc/posts/obsessed-encoder">Enigma
 Incorporated’s original post</a> · October 2026 pilot · <a
 href="assets/project-presentation.pdf">Presentation</a></em></p>
 <p><strong>The problem.</strong> If a model devotes its latent geometry to a visual feature that is easy to predict but irrelevant to action, accurate prediction can still lead to the wrong plan. A tiny episode-constant tag lets us isolate that failure while leaving the physical task unchanged.</p>
-<p class="hero-actions"><a class="code-button" href="https://github.com/Inargon/The-Obsessed-Encoder/tree/experiment/randgoal-decision-aligned">View research code on GitHub ↗</a></p>
 <p><strong>TL;DR.</strong> A visual world model can predict well, avoid
 representation collapse, and still organize its latent space around a
 feature that has nothing to do with control. On Tagged PushT, a 5×5
@@ -546,13 +545,6 @@ that criterion reduces nuisance dominance in latent distance, planner
 costs, and action selection while retaining predictive learning.</p>
 <p><strong>Predict what you can. Represent what changes
 decisions.</strong></p>
-<h3 id="quick-start-inspect-the-gradient-router">Quick Start: inspect the gradient router</h3>
-<p>The <a href="https://github.com/Inargon/The-Obsessed-Encoder/tree/experiment/randgoal-decision-aligned">public research branch</a> contains the implementation. This short check installs its pinned environment and runs the focused router test; it does <strong>not</strong> reproduce every metric in this post. The branch also contains later experiments, whose results are not pooled with the October pilot reported here.</p>
-<pre><code class="language-bash">git clone --branch experiment/randgoal-decision-aligned https://github.com/Inargon/The-Obsessed-Encoder.git
-cd The-Obsessed-Encoder
-uv sync --frozen
-uv run pytest -q leworldmodel/additional_files/tests/test_bloop_gradient_routing.py
-</code></pre>
 <hr />
 <h3 id="sources-and-project-materials">Sources and project
 materials</h3>

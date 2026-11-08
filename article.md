@@ -166,5 +166,4 @@ What the present evidence supports is narrower and useful: action-derived object
 - [The Obsessed Encoder](https://www.enigma.inc/posts/obsessed-encoder), Enigma Incorporated.
 - [When Does LeJEPA Learn a World Model?](https://arxiv.org/abs/2605.26379), Klindt, LeCun, and Balestriero.
 - [LeWorldModel](https://arxiv.org/abs/2603.19312) and its [official code](https://github.com/lucas-maes/le-wm).
-- [Project presentation: *How Do We Fix an Obsessed Encoder?*](assets/project-presentation.pdf) (October 2026). Figures and reported metrics above follow the presentation and its saved experiment audit.
 

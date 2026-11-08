@@ -4,6 +4,10 @@
 
 *Independent research inspired by [Enigma Incorporated's original post](https://www.enigma.inc/posts/obsessed-encoder) · October 2026 pilot · [Presentation](assets/project-presentation.pdf)*
 
+**The problem.** If a model devotes its latent geometry to a visual feature that is easy to predict but irrelevant to action, accurate prediction can still lead to the wrong plan. A tiny episode-constant tag lets us isolate that failure while leaving the physical task unchanged.
+
+<p class="hero-actions"><a class="code-button" href="https://github.com/Inargon/The-Obsessed-Encoder/tree/experiment/randgoal-decision-aligned">View research code on GitHub ↗</a></p>
+
 **TL;DR.** A visual world model can predict well, avoid representation collapse, and still organize its latent space around a feature that has nothing to do with control. On Tagged PushT, a 5×5 episode-constant color patch coincides with a JEPA baseline's planning success falling from 96% on clean data to 4%. We use action-derived objectives to define a local control direction, then prevent prediction from updating the shared encoder along that direction. In a single-seed pilot, Tagged PushT success reaches 88%, while changing only the tag is much less likely to change the planner's decision.
 
 ![Three separate diagnostics comparing JEPA and our model](assets/key-results.svg)
@@ -158,6 +162,17 @@ The main planning results use **one training seed**, evaluation seed 42, and **5
 What the present evidence supports is narrower and useful: action-derived objectives can provide a local criterion for how prediction updates a shared representation. In this controlled setting, that criterion reduces nuisance dominance in latent distance, planner costs, and action selection while retaining predictive learning.
 
 **Predict what you can. Represent what changes decisions.**
+
+### Quick Start: inspect the gradient router
+
+The [public research branch](https://github.com/Inargon/The-Obsessed-Encoder/tree/experiment/randgoal-decision-aligned) contains the implementation. This short check installs its pinned environment and runs the focused router test; it does **not** reproduce every metric in this post. The branch also contains later experiments, whose results are not pooled with the October pilot reported here.
+
+```bash
+git clone --branch experiment/randgoal-decision-aligned https://github.com/Inargon/The-Obsessed-Encoder.git
+cd The-Obsessed-Encoder
+uv sync --frozen
+uv run pytest -q leworldmodel/additional_files/tests/test_bloop_gradient_routing.py
+```
 
 ---
 

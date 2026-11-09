@@ -88,11 +88,11 @@ Here $m_t$ is an exponential moving average of the **control gradient**. It smoo
 
 Including the regularizer, the shared update is proportional to $g_c+\lambda_p g_{p\perp}+g_{\mathrm{reg}}$. This asymmetry matters. We do not turn down all predictive learning to make control win by brute force. We limit one way prediction can directly rewrite a locally control-sensitive direction, while leaving its other parameter directions and its private predictor available.
 
-Why does this make sense? Near the current parameters, the first-order change in control loss from a small prediction-only step depends on the inner product between $g_c$ and that step. If the reference $m_t$ equals $g_c$, the routed prediction step is orthogonal to it, so that first-order term vanishes. In practice $m_t$ is approximate and the optimization landscape is curved. This is a **local first-order explanation for one protected direction**, not a guarantee that control loss never rises or that we have identified every control-relevant factor.
+Why does this make sense? Near the current parameters, the first-order change in control loss from a small prediction-only step depends on the inner product between $g_c$ and that step. In the ideal limit where $m_t=g_c$ and the stabilizer $\epsilon=0$, the routed prediction step is orthogonal to the control gradient, so its first-order contribution vanishes. With the implemented $\epsilon>0$, a small component remains even for an exact reference; EMA lag adds another approximation. This is a **local first-order explanation for one approximately protected direction**, not a guarantee that control loss never rises or that we have identified every control-relevant factor.
 
 ![Local gradient routing and its first-order interpretation](assets/deck-11.png)
 
-*Figure 6. The EMA provides a smoother local reference than a single minibatch control gradient. The router removes prediction's component along that reference. Exact first-order neutrality requires the reference to equal the current control gradient and a sufficiently small step.*
+*Figure 6. The EMA provides a smoother local reference than a single minibatch control gradient. The diagram shows the idealized $\epsilon=0$ projection: exact first-order neutrality also requires the reference to equal the current control gradient. With a nonzero stabilizer and EMA lag, protection is approximate.*
 
 ## Follow the evidence from features to decisions
 

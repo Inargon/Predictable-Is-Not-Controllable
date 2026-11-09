@@ -305,17 +305,18 @@ its other parameter directions and its private predictor available.</p>
 first-order change in control loss from a small prediction-only step
 depends on the inner product between
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>g</mi><mi>c</mi></msub><annotation encoding="application/x-tex">g_c</annotation></semantics></math>
-and that step. If the reference
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>m</mi><mi>t</mi></msub><annotation encoding="application/x-tex">m_t</annotation></semantics></math>
-equals
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>g</mi><mi>c</mi></msub><annotation encoding="application/x-tex">g_c</annotation></semantics></math>,
-the routed prediction step is orthogonal to it, so that first-order term
-vanishes. In practice
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>m</mi><mi>t</mi></msub><annotation encoding="application/x-tex">m_t</annotation></semantics></math>
-is approximate and the optimization landscape is curved. This is a
-<strong>local first-order explanation for one protected
-direction</strong>, not a guarantee that control loss never rises or
-that we have identified every control-relevant factor.</p>
+and that step. In the ideal limit where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>t</mi></msub><mo>=</mo><msub><mi>g</mi><mi>c</mi></msub></mrow><annotation encoding="application/x-tex">m_t=g_c</annotation></semantics></math>
+and the stabilizer
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϵ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\epsilon=0</annotation></semantics></math>,
+the routed prediction step is orthogonal to the control gradient, so its
+first-order contribution vanishes. With the implemented
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϵ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\epsilon&gt;0</annotation></semantics></math>,
+a small component remains even for an exact reference; EMA lag adds
+another approximation. This is a <strong>local first-order explanation
+for one approximately protected direction</strong>, not a guarantee that
+control loss never rises or that we have identified every
+control-relevant factor.</p>
 <figure>
 <img src="assets/deck-11.png"
 alt="Local gradient routing and its first-order interpretation" />
@@ -323,10 +324,11 @@ alt="Local gradient routing and its first-order interpretation" />
 first-order interpretation</figcaption>
 </figure>
 <p><em>Figure 6. The EMA provides a smoother local reference than a
-single minibatch control gradient. The router removes prediction’s
-component along that reference. Exact first-order neutrality requires
-the reference to equal the current control gradient and a sufficiently
-small step.</em></p>
+single minibatch control gradient. The diagram shows the idealized
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϵ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\epsilon=0</annotation></semantics></math>
+projection: exact first-order neutrality also requires the reference to
+equal the current control gradient. With a nonzero stabilizer and EMA
+lag, protection is approximate.</em></p>
 <h2 id="follow-the-evidence-from-features-to-decisions">Follow the
 evidence from features to decisions</h2>
 <p>We evaluate three different questions: <strong>Is physical state
